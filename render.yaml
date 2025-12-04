@@ -17,15 +17,15 @@ services:
 
   # Frontend (Static + Nginx proxy)
   - type: web
-    name: multistream-frontend
+    name:frontend
     env: static
-    repo: https://github.com/yourusername/multistream-app  
+    repo: https://github.com/Rahul-RShankar/Ostream--broadcasting  
     rootDir: frontend
     plan: free
     envVars:
       - key: BACKEND_URL
         fromService:
-          name: multistream-backend
+          name:backend
           type: web
           property: hostport  # Fixed: hostport instead of url
 
