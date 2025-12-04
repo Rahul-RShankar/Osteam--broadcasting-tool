@@ -39,29 +39,61 @@ app.post('/extract-stream', (req, res) => {
   const { url } = req.body;
 
   if (!url) {
-    return res.status(400).json({ error: 'URL required' });
+    return res.status(200).json({ success: false, message: 'URL required' });
   }
 
-  // Use yt-dlp to get stream URL
-  exec(`yt-dlp -g -f best "${url}" 2>/dev/null || echo "ERROR"`, (error, stdout, stderr) => {
-    if (error || stdout.includes('ERROR')) {
-      return res.status(400).json({ 
-        error: 'Failed to extract stream',
-        details: stderr || 'Invalid URL or stream not available'
+  console.log('Extracting stream for:', url); // Add logging
+
+  // Create child process with timeout
+  const child = exec(`yt-dlp -g -f "best[height<=720]" "${url}"`, { 
+    timeout: 25000, // 25 second timeout
+    maxBuffer: 1024 * 1024 // 1MB buffer
+  }, (error, stdout, stderr) => {
+    console.log('yt-dlp finished:', { error: !!error, stdout: stdout?.length, stderr: stderr?.length });
+    
+    if (error) {
+      console.error('yt-dlp error:', error.message, stderr);
+      return res.status(200).json({ 
+        success: false,
+        message: 'Extraction failed: ' + (stderr || error.message || 'Unknown error')
       });
     }
 
     const streamUrl = stdout.trim();
+    if (!streamUrl || streamUrl.includes('ERROR')) {
+      return res.status(200).json({ 
+        success: false, 
+        message: 'No stream found for this URL'
+      });
+    }
+
+    console.log('Stream extracted:', streamUrl.substring(0, 100) + '...');
     res.json({ 
       success: true, 
       stream_url: streamUrl,
-      url: url
+      original_url: url
     });
   });
+
+  // SAFETY: Force timeout response after 25s even if callback doesn't fire
+  const timeoutId = setTimeout(() => {
+    console.log('Extraction timeout for:', url);
+    child.kill('SIGTERM');
+    if (!res.headersSent) {
+      res.status(200).json({ 
+        success: false, 
+        message: 'Extraction timeout (25s limit)' 
+      });
+    }
+  }, 25000);
+
+  // Clear timeout if process finishes first
+  child.on('close', () => clearTimeout(timeoutId));
 });
 
+
 // Start streaming
-app.post('/api/stream/start', (req, res) => {
+app.post('/stream/start', (req, res) => {
   const { sourceUrl, destinations, settings } = req.body;
   const streamId = Date.now().toString();
 
@@ -137,7 +169,7 @@ app.post('/api/stream/start', (req, res) => {
 });
 
 // Stop streaming
-app.post('/api/stream/stop', (req, res) => {
+app.post('/stream/stop', (req, res) => {
   const { streamId } = req.body;
 
   if (!activeStreams.has(streamId)) {
