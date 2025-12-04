@@ -1,4 +1,4 @@
-app = "multistream"
+app = "Ostream"
 primary_region = "iad"
 
 [build]
