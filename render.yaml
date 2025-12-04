@@ -1,36 +1,37 @@
 services:
-  # Backend API Service
+  # Backend API (Node.js)
   - type: web
     name: multistream-backend
     env: node
-    dockerfilePath: ./backend/Dockerfile
+    repo: https://github.com/yourusername/multistream-app
+    rootDir: backend
     plan: starter
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 3000
+        value: 10000
     healthCheckPath: /health
 
-  # Frontend Service  
+  # Frontend (Static + Nginx proxy)
   - type: web
     name: multistream-frontend
-    env: docker
-    dockerfilePath: ./Dockerfile.nginx
+    env: static
+    repo: https://github.com/yourusername/multistream-app  
+    rootDir: frontend
     plan: starter
     envVars:
       - key: BACKEND_URL
         fromService:
           name: multistream-backend
-          property: url  # Render internal URL
-      - key: NGINX_BACKEND_HOST
-        fromService:
-          name: multistream-backend
-          envVar: RENDER_EXTERNAL_HOSTNAME  # For nginx config
+          type: web
+          property: hostport  # Fixed: hostport instead of url
 
-  # RTMP Server
+  # RTMP Server (Docker)
   - type: web
     name: multistream-rtmp
-    env: docker
+    env: docker  
     dockerfilePath: ./Dockerfile.rtmp
     plan: starter
