@@ -36,19 +36,26 @@ app.get('/api/streams', (req, res) => {
 
 // Extract stream from URL using yt-dlp
 app.post('/extract-stream', (req, res) => {
-  const { url } = req.body;
-
+  const { url, cookies } = req.body;  // Add cookies field
+  
   if (!url) {
     return res.status(200).json({ success: false, message: 'URL required' });
   }
   
-  console.log('Extracting stream for:', url); // Add logging
+  console.log('Extracting stream for:', url);
 
- // FIXED YouTube workaround
+  // FIXED YouTube workaround + Cookies
   const isYouTube = url.includes('youtube.com') || url.includes('youtu.be');
-  const ytDlpArgs = isYouTube 
+  let ytDlpArgs = isYouTube 
     ? `yt-dlp --extractor-args "youtube:player_client=web,default" --no-warnings -g -f "best[height<=720]" "${url}"`
     : `yt-dlp -g -f "best[height<=720]" "${url}"`;
+
+  // If user provides cookies (bypasses YouTube bot detection)
+  if (cookies) {
+    const cookiePath = `/tmp/youtube_cookies_${Date.now()}.txt`;
+    fs.writeFileSync(cookiePath, cookies);
+    ytDlpArgs = `${ytDlpArgs} --cookies ${cookiePath}`;
+  }
  // Create child process with timeout
   const child = exec(ytDlpArgs, { 
     timeout: 30000,
