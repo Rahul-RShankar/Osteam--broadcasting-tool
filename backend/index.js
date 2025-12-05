@@ -51,10 +51,12 @@ app.post('/extract-stream', (req, res) => {
     : `yt-dlp -g -f "best[height<=720]" "${url}"`;
 
   // If user provides cookies (bypasses YouTube bot detection)
+  // ⭐ COOKIES SUPPORT - Bypasses YouTube bot detection!
   if (cookies) {
-    const cookiePath = `/tmp/youtube_cookies_${Date.now()}.txt`;
+    const cookiePath = `/tmp/cookies_${Date.now()}.txt`;
     fs.writeFileSync(cookiePath, cookies);
-    ytDlpArgs = `${ytDlpArgs} --cookies ${cookiePath}`;
+    ytDlpArgs += ` --cookies "${cookiePath}"`;
+    console.log('Using user cookies');
   }
  // Create child process with timeout
   const child = exec(ytDlpArgs, { 
