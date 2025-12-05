@@ -203,12 +203,12 @@
 
                 <label id="sourceLabel">Video URL:</label>
                 <textarea id="sourceInput" placeholder="https://www.youtube.com/watch?v=..." rows="2" required></textarea>
-                 <!-- Add this to your form -->
-<input type="file" id="cookiesFile" accept=".txt" style="margin: 10px 0;">
-<small>Optional: Upload YouTube cookies.txt to bypass bot detection</small>
+                
 
 <script>
-
+ <!-- Add this to your form -->
+<input type="file" id="cookiesFile" accept=".txt" style="margin: 10px 0;">
+<small>Optional: Upload YouTube cookies.txt to bypass bot detection</small>
   async function extractStream() {
   const url = document.getElementById('sourceInput').value;
   if (!url) {
@@ -228,7 +228,7 @@
     const response = await fetch('/extract-stream', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ data })
+      body: JSON.stringify(data)
     });
 
     if (response.ok) {
