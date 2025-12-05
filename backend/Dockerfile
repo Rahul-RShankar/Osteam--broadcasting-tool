@@ -36,4 +36,5 @@ RUN chown -R nginx:nginx /var/log/nginx /var/run/nginx /usr/share/nginx/html
 EXPOSE 80 1935
 
 # Start nginx + Node.js
-CMD sh -c "nginx -g 'daemon off;' & cd /app && node backend/index.js"
+CMD sh -c "nginx -g 'daemon off;' & cd /app && node backend/index.js & wait"
+
