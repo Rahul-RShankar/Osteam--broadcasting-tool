@@ -7,7 +7,7 @@ RUN apk add --no-cache nginx python3 py3-pip ffmpeg
 RUN pip3 install yt-dlp
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app/backend
 
 # Copy BOTH package files (backend has package.json, root has package-lock.json)
 COPY backend/package.json ./
@@ -37,4 +37,5 @@ EXPOSE 80 1935
 
 # Start nginx + Node.js
 CMD sh -c "nginx -g 'daemon off;' & cd /app && node backend/index.js & wait"
+
 
